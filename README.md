@@ -10,7 +10,7 @@ Self-attentions are applied to later two layers of both discriminator and genera
 
 ## Current update status
 * [ ] Supervised setting
-* [ ] Tensorboard loggings
+* [x] Tensorboard loggings
 * [x] **[20180608] updated the self-attention module. Thanks to my colleague [Cheonbok Park](https://github.com/cheonbok94)! see 'sagan_models.py' for the update. Should be efficient, and run on large sized images**
 * [x] Attention visualization (LSUN Church-outdoor)
 * [x] Unsupervised setting (use no label yet) 
@@ -48,7 +48,7 @@ $ cd Self-Attention-GAN
 
 #### 2. Install datasets (CelebA or LSUN)
 ```bash
-$ bash download.sh CelebA
+$ bash download.sh CelebA (404 not found)
 or
 $ bash download.sh LSUN
 ```
