@@ -1,8 +1,12 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import os
 import time
 import torch
 import datetime
+import numpy as np
+import shutil
 
 import torch.nn as nn
 from torch.autograd import Variable
@@ -11,17 +15,22 @@ from torchvision.utils import save_image
 from sagan_models import Generator, Discriminator
 from utils import *
 
+
 class Trainer(object):
+
     def __init__(self, data_loader, config):
 
         # Data loader
+
         self.data_loader = data_loader
 
         # exact model and loss
+
         self.model = config.model
         self.adv_loss = config.adv_loss
 
         # Model hyper-parameters
+
         self.imsize = config.imsize
         self.g_num = config.g_num
         self.z_dim = config.z_dim
@@ -53,9 +62,12 @@ class Trainer(object):
         self.version = config.version
 
         # Path
+
         self.log_path = os.path.join(config.log_path, self.version)
-        self.sample_path = os.path.join(config.sample_path, self.version)
-        self.model_save_path = os.path.join(config.model_save_path, self.version)
+        self.sample_path = os.path.join(config.sample_path,
+                self.version)
+        self.model_save_path = os.path.join(config.model_save_path,
+                self.version)
 
         self.build_model()
 
@@ -63,86 +75,98 @@ class Trainer(object):
             self.build_tensorboard()
 
         # Start with trained model
+
         if self.pretrained_model:
             self.load_pretrained_model()
-
-
 
     def train(self):
 
         # Data iterator
+
         data_iter = iter(self.data_loader)
         step_per_epoch = len(self.data_loader)
         model_save_step = int(self.model_save_step * step_per_epoch)
 
         # Fixed input for debugging
+
         fixed_z = tensor2var(torch.randn(self.batch_size, self.z_dim))
 
         # Start with trained model
+
         if self.pretrained_model:
             start = self.pretrained_model + 1
         else:
             start = 0
 
         # Start time
+
         start_time = time.time()
         for step in range(start, self.total_step):
 
             # ================== Train D ================== #
+
             self.D.train()
             self.G.train()
 
             try:
-                real_images, _ = next(data_iter)
+                (real_images, _) = next(data_iter)
             except:
                 data_iter = iter(self.data_loader)
-                real_images, _ = next(data_iter)
+                (real_images, _) = next(data_iter)
 
             # Compute loss with real images
             # dr1, dr2, df1, df2, gf1, gf2 are attention scores
+
             real_images = tensor2var(real_images)
-            d_out_real,dr1,dr2 = self.D(real_images)
+            (d_out_real, dr1, dr2) = self.D(real_images)
             if self.adv_loss == 'wgan-gp':
-                d_loss_real = - torch.mean(d_out_real)
+                d_loss_real = -torch.mean(d_out_real)
             elif self.adv_loss == 'hinge':
                 d_loss_real = torch.nn.ReLU()(1.0 - d_out_real).mean()
 
             # apply Gumbel Softmax
+
             z = tensor2var(torch.randn(real_images.size(0), self.z_dim))
-            fake_images,gf1,gf2 = self.G(z)
-            d_out_fake,df1,df2 = self.D(fake_images)
+            (fake_images, gf1, gf2) = self.G(z)
+            (d_out_fake, df1, df2) = self.D(fake_images)
 
             if self.adv_loss == 'wgan-gp':
                 d_loss_fake = d_out_fake.mean()
             elif self.adv_loss == 'hinge':
                 d_loss_fake = torch.nn.ReLU()(1.0 + d_out_fake).mean()
 
-
             # Backward + Optimize
+
             d_loss = d_loss_real + d_loss_fake
             self.reset_grad()
             d_loss.backward()
             self.d_optimizer.step()
 
-
             if self.adv_loss == 'wgan-gp':
-                # Compute gradient penalty
-                alpha = torch.rand(real_images.size(0), 1, 1, 1).cuda().expand_as(real_images)
-                interpolated = Variable(alpha * real_images.data + (1 - alpha) * fake_images.data, requires_grad=True)
-                out,_,_ = self.D(interpolated)
 
-                grad = torch.autograd.grad(outputs=out,
-                                           inputs=interpolated,
-                                           grad_outputs=torch.ones(out.size()).cuda(),
-                                           retain_graph=True,
-                                           create_graph=True,
-                                           only_inputs=True)[0]
+                # Compute gradient penalty
+
+                alpha = torch.rand(real_images.size(0), 1, 1,
+                                   1).cuda().expand_as(real_images)
+                interpolated = Variable(alpha * real_images.data + (1
+                        - alpha) * fake_images.data, requires_grad=True)
+                (out, _, _) = self.D(interpolated)
+
+                grad = torch.autograd.grad(
+                    outputs=out,
+                    inputs=interpolated,
+                    grad_outputs=torch.ones(out.size()).cuda(),
+                    retain_graph=True,
+                    create_graph=True,
+                    only_inputs=True,
+                    )[0]
 
                 grad = grad.view(grad.size(0), -1)
                 grad_l2norm = torch.sqrt(torch.sum(grad ** 2, dim=1))
                 d_loss_gp = torch.mean((grad_l2norm - 1) ** 2)
 
                 # Backward + Optimize
+
                 d_loss = self.lambda_gp * d_loss_gp
 
                 self.reset_grad()
@@ -151,70 +175,131 @@ class Trainer(object):
 
             # ================== Train G and gumbel ================== #
             # Create random noise
+
             z = tensor2var(torch.randn(real_images.size(0), self.z_dim))
-            fake_images,_,_ = self.G(z)
+            (fake_images, _, _) = self.G(z)
 
             # Compute loss with fake images
-            g_out_fake,_,_ = self.D(fake_images)  # batch x n
+
+            (g_out_fake, _, _) = self.D(fake_images)  # batch x n
             if self.adv_loss == 'wgan-gp':
-                g_loss_fake = - g_out_fake.mean()
+                g_loss_fake = -g_out_fake.mean()
             elif self.adv_loss == 'hinge':
-                g_loss_fake = - g_out_fake.mean()
+                g_loss_fake = -g_out_fake.mean()
 
             self.reset_grad()
             g_loss_fake.backward()
             self.g_optimizer.step()
 
-
             # Print out log info
+
             if (step + 1) % self.log_step == 0:
                 elapsed = time.time() - start_time
                 elapsed = str(datetime.timedelta(seconds=elapsed))
-                print("Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_out_real: {:.4f}, "
-                      " ave_gamma_l3: {:.4f}, ave_gamma_l4: {:.4f}".
-                      format(elapsed, step + 1, self.total_step, (step + 1),
-                             self.total_step , d_loss_real.data[0],
-                             self.G.attn1.gamma.mean().data[0], self.G.attn2.gamma.mean().data[0] ))
+                print('Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_out_real: {:.4f},  ave_gamma_l3: {:.4f}, ave_gamma_l4: {:.4f}'.format(
+                    elapsed,
+                    step + 1,
+                    self.total_step,
+                    step + 1,
+                    self.total_step,
+                    d_loss_real.data[0],
+                    self.G.attn1.gamma.mean().data[0],
+                    self.G.attn2.gamma.mean().data[0],
+                    ))
 
-            # Sample images
+        # (1) Log values of the losses (scalars)
+
+                info = {
+                    'd_loss_real': d_loss_real.data[0],
+                    'd_loss_fake': d_loss_fake.data[0],
+                    'd_loss': d_loss.data[0],
+                    'g_loss_fake': g_loss_fake.data[0],
+                    'ave_gamma_l3': self.G.attn1.gamma.mean().data[0],
+                    'ave_gamma_l4': self.G.attn2.gamma.mean().data[0],
+                    }
+
+                for (tag, value) in info.items():
+                    self.logger.scalar_summary(tag, value, step + 1)
+
+            # Sample images / Save and log
+
             if (step + 1) % self.sample_step == 0:
-                fake_images,_,_= self.G(fixed_z)
-                save_image(denorm(fake_images.data),
-                           os.path.join(self.sample_path, '{}_fake.png'.format(step + 1)))
 
-            if (step+1) % model_save_step==0:
+                 # (2) Log values and gradients of the parameters (histogram)
+
+                for (net, name) in zip([self.G, self.D], ['G_', 'D_']):
+                    for (tag, value) in net.named_parameters():
+                        tag = name + tag.replace('.', '/')
+                        self.logger.histo_summary(tag,
+                                value.data.cpu().numpy(), step + 1)
+
+                # (3) Log the images
+
+                info = \
+                    {'fake_images': (fake_images.view(fake_images.size())[:
+                     10, :, :, :]).data.cpu().numpy(),
+                     'real_images': (real_images.view(real_images.size())[:
+                     10, :, :, :]).data.cpu().numpy()}
+
+                (fake_images, _, _) = self.G(fixed_z)
+                save_image(denorm(fake_images.data),
+                           os.path.join(self.sample_path,
+                           '{}_fake.png'.format(step + 1)))
+
+                #info['fixed_fake_images'] = \
+                #    (denorm(real_images.data).view(denorm(real_images.data).size())[:
+                #               5, :, :, :]).data.cpu().numpy()
+
+                for (tag, image) in info.items():
+                    self.logger.image_summary(tag, image, step + 1)
+
+            if (step + 1) % model_save_step == 0:
                 torch.save(self.G.state_dict(),
-                           os.path.join(self.model_save_path, '{}_G.pth'.format(step + 1)))
+                           os.path.join(self.model_save_path,
+                           '{}_G.pth'.format(step + 1)))
                 torch.save(self.D.state_dict(),
-                           os.path.join(self.model_save_path, '{}_D.pth'.format(step + 1)))
+                           os.path.join(self.model_save_path,
+                           '{}_D.pth'.format(step + 1)))
 
     def build_model(self):
 
-        self.G = Generator(self.batch_size,self.imsize, self.z_dim, self.g_conv_dim).cuda()
-        self.D = Discriminator(self.batch_size,self.imsize, self.d_conv_dim).cuda()
+        self.G = Generator(self.batch_size, self.imsize, self.z_dim,
+                           self.g_conv_dim).cuda()
+        self.D = Discriminator(self.batch_size, self.imsize,
+                               self.d_conv_dim).cuda()
         if self.parallel:
             self.G = nn.DataParallel(self.G)
             self.D = nn.DataParallel(self.D)
 
         # Loss and optimizer
         # self.g_optimizer = torch.optim.Adam(self.G.parameters(), self.g_lr, [self.beta1, self.beta2])
-        self.g_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.G.parameters()), self.g_lr, [self.beta1, self.beta2])
-        self.d_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.D.parameters()), self.d_lr, [self.beta1, self.beta2])
+
+        self.g_optimizer = torch.optim.Adam(filter(lambda p: \
+                p.requires_grad, self.G.parameters()), self.g_lr,
+                [self.beta1, self.beta2])
+        self.d_optimizer = torch.optim.Adam(filter(lambda p: \
+                p.requires_grad, self.D.parameters()), self.d_lr,
+                [self.beta1, self.beta2])
 
         self.c_loss = torch.nn.CrossEntropyLoss()
+
         # print networks
+
         print(self.G)
         print(self.D)
 
     def build_tensorboard(self):
         from logger import Logger
+        #if os.path.exists(self.log_path):
+        #    shutil.rmtree(self.log_path)
+        #os.makedirs(self.log_path)
         self.logger = Logger(self.log_path)
 
     def load_pretrained_model(self):
-        self.G.load_state_dict(torch.load(os.path.join(
-            self.model_save_path, '{}_G.pth'.format(self.pretrained_model))))
-        self.D.load_state_dict(torch.load(os.path.join(
-            self.model_save_path, '{}_D.pth'.format(self.pretrained_model))))
+        self.G.load_state_dict(torch.load(os.path.join(self.model_save_path,
+                               '{}_G.pth'.format(self.pretrained_model))))
+        self.D.load_state_dict(torch.load(os.path.join(self.model_save_path,
+                               '{}_D.pth'.format(self.pretrained_model))))
         print('loaded trained models (step: {})..!'.format(self.pretrained_model))
 
     def reset_grad(self):
@@ -222,5 +307,7 @@ class Trainer(object):
         self.g_optimizer.zero_grad()
 
     def save_sample(self, data_iter):
-        real_images, _ = next(data_iter)
-        save_image(denorm(real_images), os.path.join(self.sample_path, 'real.png'))
+        (real_images, _) = next(data_iter)
+        save_image(denorm(real_images), os.path.join(self.sample_path,
+                   'real.png'))
+

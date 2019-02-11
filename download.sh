@@ -18,9 +18,9 @@ mkdir -p ./data/
 wget -N $URL -O $ZIP_FILE
 unzip $ZIP_FILE -d ./data/
 
-if [ $FILE == 'CelebA' ]
-then
-    mv ./data/CelebA_nocrop ./data/CelebA
-fi
+#if [ $FILE == 'CelebA' ]
+#then
+#    mv ./data/CelebA_nocrop ./data/CelebA
+#:wfi
 
-rm $ZIP_FILE
+#rm $ZIP_FILE
