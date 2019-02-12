@@ -246,9 +246,9 @@ class Trainer(object):
                            os.path.join(self.sample_path,
                            '{}_fake.png'.format(step + 1)))
 
-                #info['fixed_fake_images'] = \
-                #    (denorm(real_images.data).view(denorm(real_images.data).size())[:
-                #               5, :, :, :]).data.cpu().numpy()
+                info['fixed_fake_images'] = \
+                   (denorm(real_images.data).view(denorm(real_images.data).size())[:
+                              5, :, :, :]).cpu().numpy()
 
                 for (tag, image) in info.items():
                     self.logger.image_summary(tag, image, step + 1)
@@ -310,4 +310,3 @@ class Trainer(object):
         (real_images, _) = next(data_iter)
         save_image(denorm(real_images), os.path.join(self.sample_path,
                    'real.png'))
-

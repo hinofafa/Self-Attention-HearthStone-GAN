@@ -64,7 +64,7 @@ $ python main.py --batch_size 64 --imsize 64 --dataset lsun --adv_loss hinge --v
 
 Advanced training:
 ```bash
-python main.py --batch_size 64 --imsize 64 --dataset lsun --adv_loss hinge --version sagan_lsun --num_workers 12 --parallel True --use_tensorboard True
+python main.py --batch_size 64 --imsize 64 --dataset lsun --adv_loss hinge --version sagan_lsun --num_workers 12 --use_tensorboard True
 ```
 #### 4. Enjoy the results
 ```bash
