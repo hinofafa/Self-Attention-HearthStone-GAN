@@ -1,0 +1,4 @@
+*.zip
+*.mdb
+church_outdoor_train_lmdb/
+sagan_lsun/
