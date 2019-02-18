@@ -203,8 +203,8 @@ class Trainer(object):
                     step + 1,
                     self.total_step,
                     d_loss_real.data[0],
-                    self.G.attn1.gamma.mean().data[0],
-                    self.G.attn2.gamma.mean().data[0],
+                    self.G.module.attn1.gamma.mean().data[0],
+                    self.G.module.attn2.gamma.mean().data[0],
                     ))
 
         # (1) Log values of the losses (scalars)
@@ -214,8 +214,8 @@ class Trainer(object):
                     'd_loss_fake': d_loss_fake.data[0],
                     'd_loss': d_loss.data[0],
                     'g_loss_fake': g_loss_fake.data[0],
-                    'ave_gamma_l3': self.G.attn1.gamma.mean().data[0],
-                    'ave_gamma_l4': self.G.attn2.gamma.mean().data[0],
+                    'ave_gamma_l3': self.G.module.attn1.gamma.mean().data[0],
+                    'ave_gamma_l4': self.G.module.attn2.gamma.mean().data[0],
                     }
 
                 for (tag, value) in info.items():

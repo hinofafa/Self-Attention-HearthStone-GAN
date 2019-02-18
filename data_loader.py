@@ -12,8 +12,10 @@ class Data_Loader():
         self.shuf = shuf
         self.train = train
 
-    def transform(self, resize, totensor, normalize, centercrop):
+    def transform(self, resize, totensor, normalize, centercrop, padding = False):
         options = []
+        if padding:
+            options.append(transforms.Pad(padding=(55,0)))
         if centercrop:
             options.append(transforms.CenterCrop(160))
         if resize:
@@ -26,7 +28,7 @@ class Data_Loader():
         return transform
 
     def load_lsun(self, classes='church_outdoor_train'):
-        transforms = self.transform(True, True, True, False)
+        transforms = self.transform(True, True, True, True)
         dataset = dsets.LSUN(self.path, classes=[classes], transform=transforms)
         return dataset
 
@@ -35,17 +37,23 @@ class Data_Loader():
         dataset = dsets.ImageFolder(self.path+'/CelebA', transform=transforms)
         return dataset
 
+    def load_hearthstone(self):
+        transforms = self.transform(True, True, True, False, True)
+        dataset = dsets.ImageFolder(self.path+'/hearthstone-card-images', transform=transforms)
+        return dataset
+
 
     def loader(self):
         if self.dataset == 'lsun':
             dataset = self.load_lsun()
         elif self.dataset == 'celeb':
             dataset = self.load_celeb()
+        elif self.dataset == 'hearthstone':
+            dataset = self.load_hearthstone()
 
         loader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=self.batch,
                                               shuffle=self.shuf,
-                                              num_workers=2,
+                                              num_workers=16,
                                               drop_last=True)
         return loader
-

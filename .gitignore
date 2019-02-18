@@ -2,3 +2,12 @@
 *.mdb
 church_outdoor_train_lmdb/
 sagan_lsun/
+samples2/
+samples/
+logs2/
+logs/
+models/
+models2/
+attn/
+attn2/
+data/
