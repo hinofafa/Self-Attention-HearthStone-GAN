@@ -89,7 +89,7 @@ class Trainer(object):
 
         # Fixed input for debugging
 
-        fixed_z = tensor2var(torch.randn(self.batch_size, self.z_dim))
+        fixed_z = tensor2var(torch.normal(0, torch.ones([self.batch_size*5, self.z_dim])*5))
 
         # Start with trained model
 
