@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+import cv2
 import os
 import time
 import torch
@@ -242,13 +242,14 @@ class Trainer(object):
                         self.logger.histo_summary(tag,
                                 value.data.cpu().numpy(), step + 1)
 
-                # (3) Log the images
+                # (3) Log the tensorboard
 
                 info = \
                     {'fake_images': (fake_images.view(fake_images.size())[:
                      16, :, :, :]).data.cpu().numpy(),
                      'real_images': (real_images.view(real_images.size())[:
-                     16, :, :, :]).data.cpu().numpy()}
+                     16, :, :, :]).data.cpu().numpy()},
+
 
                 # (fake_images, at1, at2) = self.G(fixed_z)
                 (fake_images, at2) = self.G(fixed_z)
@@ -264,16 +265,32 @@ class Trainer(object):
                 at2_mean = at2_4d.mean(dim=1,keepdim=False) # B * W * H
                 print('at2_mean ', at2_mean.size())
 
-                # save_gradient_images(at2_mean,'{}_attn.png'.format(step + 1))
-                # info['fixed_fake_images'] = \
-                #    (denorm(real_images.data).view(denorm(real_images.data).size())[:
-                #               5, :, :, :]).cpu().numpy()
+                print('***** start create activation map *****')
+                attn_list = []
+                for i in range(at2.size()[0]):
+                    print('fake_images size: ',fake_images[i].size())
+                    print('at2 mean size', at2_mean[i].size())
 
-                # print('***** Attention_images_1 *****')
-                # print(at1.size())
-                #
-                # info['Attention_images_1'] = (at1.view(at1.size())[:
-                #  16, :, :, :]).data.cpu().numpy()
+                    f = BytesIO()
+                    img = np.uint8(fake_images[i,:,:].mul(255).numpy())
+                    a = np.uint8(at2_mean[i,:,:].mul(255).numpy())
+                    print('image: ', img.size)
+                    print('a shape: ',a.shape)
+
+                    im_image = img.reshape(img.shape[1],img.shape[2],img.shape[0])
+                    im_attn = cv2.applyColorMap(a, cv2.COLORMAP_JET)
+
+                    img_with_heatmap = np.float32(im_attn) + np.float32(im_image)
+                    img_with_heatmap = img_with_heatmap / np.max(img_with_heatmap)
+
+                    attn_np = np.uint8((255 * img_with_heatmap).reshape(img_with_heatmap.shape[2],img_with_heatmap.shape[0],img_with_heatmap.shape[1]))
+                    attn_torch = torch.from_numpy(attn_np)
+                    print('final attn image size: ', attn_image.size())
+                    attn_list.append(attn_image.unsqueeze(0))
+
+                attn_images = torch.cat(attn_list)
+                print('attn images list: ',attn_images.size())
+                info['attn_images'] = (attn_images.view(attn_images.size())[:16, :, :, :]).data.cpu().numpy()
 
 
                 for (tag, image) in info.items():
