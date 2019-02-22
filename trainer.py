@@ -10,6 +10,7 @@ import shutil
 import math
 
 import torch.nn as nn
+from io import BytesIO
 from torch.autograd import Variable
 from torchvision.utils import save_image
 
@@ -131,7 +132,7 @@ class Trainer(object):
             # (fake_images, gf1, gf2) = self.G(z)
             (fake_images, gf2) = self.G(z)
 
-            if i < 5:
+            if i < 1:
                 print('***** Result Image size now *****')
                 print(fake_images.size())
                 # print(gf1.size())
@@ -248,7 +249,7 @@ class Trainer(object):
                     {'fake_images': (fake_images.view(fake_images.size())[:
                      16, :, :, :]).data.cpu().numpy(),
                      'real_images': (real_images.view(real_images.size())[:
-                     16, :, :, :]).data.cpu().numpy()},
+                     16, :, :, :]).data.cpu().numpy()}
 
 
                 # (fake_images, at1, at2) = self.G(fixed_z)
@@ -257,25 +258,25 @@ class Trainer(object):
                            os.path.join(self.sample_path,
                            '{}_fake.png'.format(step + 1)))
 
-                print('***** Fake Image size now *****')
-                print('fake_images ', fake_images.size())
-                print('at2 ', at2.size())   # B * N * N
+                # print('***** Fake Image size now *****')
+                # print('fake_images ', fake_images.size())
+                # print('at2 ', at2.size())   # B * N * N
                 at2_4d = at2.view(*(at2.size()[0], at2.size()[1], int(math.sqrt(at2.size()[2])), int(math.sqrt(at2.size()[2])))) # W * N * W * H
-                print('at2_4d ', at2_4d.size())
+                # print('at2_4d ', at2_4d.size())
                 at2_mean = at2_4d.mean(dim=1,keepdim=False) # B * W * H
-                print('at2_mean ', at2_mean.size())
+                # print('at2_mean ', at2_mean.size())
 
                 print('***** start create activation map *****')
                 attn_list = []
                 for i in range(at2.size()[0]):
-                    print('fake_images size: ',fake_images[i].size())
-                    print('at2 mean size', at2_mean[i].size())
+                    # print('fake_images size: ',fake_images[i].size())
+                    # print('at2 mean size', at2_mean[i].size())
 
                     f = BytesIO()
-                    img = np.uint8(fake_images[i,:,:].mul(255).numpy())
-                    a = np.uint8(at2_mean[i,:,:].mul(255).numpy())
-                    print('image: ', img.size)
-                    print('a shape: ',a.shape)
+                    img = np.uint8(fake_images[i,:,:,:].mul(255).data.cpu().numpy())
+                    a = np.uint8(at2_mean[i,:,:].mul(255).data.cpu().numpy())
+                    # print('image: ', img.shape)
+                    # print('a shape: ',a.shape)
 
                     im_image = img.reshape(img.shape[1],img.shape[2],img.shape[0])
                     im_attn = cv2.applyColorMap(a, cv2.COLORMAP_JET)
@@ -285,12 +286,12 @@ class Trainer(object):
 
                     attn_np = np.uint8((255 * img_with_heatmap).reshape(img_with_heatmap.shape[2],img_with_heatmap.shape[0],img_with_heatmap.shape[1]))
                     attn_torch = torch.from_numpy(attn_np)
-                    print('final attn image size: ', attn_image.size())
-                    attn_list.append(attn_image.unsqueeze(0))
+                    # print('final attn image size: ', attn_torch.size())
+                    attn_list.append(attn_torch.unsqueeze(0))
 
                 attn_images = torch.cat(attn_list)
                 print('attn images list: ',attn_images.size())
-                info['attn_images'] = (attn_images.view(attn_images.size())[:16, :, :, :]).data.cpu().numpy()
+                info['attn_images'] = (attn_images.view(attn_images.size())[:16, :, :, :]).numpy()
 
 
                 for (tag, image) in info.items():
