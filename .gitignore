@@ -11,3 +11,4 @@ models2/
 attn/
 attn2/
 data/
+__pycache__/

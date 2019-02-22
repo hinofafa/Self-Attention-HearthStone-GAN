@@ -65,7 +65,7 @@ $ python main.py --batch_size 64 --imsize 64 --dataset lsun --adv_loss hinge --v
 
 Advanced training:
 ```bash
-python main.py --batch_size 16 --imsize 128 --dataset hearthstone --adv_loss hinge --version sagan_hearth_ --num_workers 16 --use_tensorboard True --parallel True --log_path ./logs2 --model_save_path ./models2  --attn ./attn2 --sample_path ./samples2 --total_step 200000 --log_step 100
+python main.py --batch_size 64 --imsize 64 --dataset hearthstone --adv_loss hinge --version sagan_hearth_sd20 --num_workers 16 --use_tensorboard True --parallel True --log_path ./logs2 --model_save_path ./models2  --attn ./attn2 --sample_path ./samples2 --total_step 100000 --log_step 1
 ```
 #### 4. Enjoy the results
 ```bash

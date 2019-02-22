@@ -7,6 +7,7 @@ import torch
 import datetime
 import numpy as np
 import shutil
+import math
 
 import torch.nn as nn
 from torch.autograd import Variable
@@ -89,7 +90,7 @@ class Trainer(object):
 
         # Fixed input for debugging
 
-        fixed_z = tensor2var(torch.normal(0, torch.ones([self.batch_size*5, self.z_dim])*5))
+        fixed_z = tensor2var(torch.normal(0, torch.ones([self.batch_size, self.z_dim])*3))
 
         # Start with trained model
 
@@ -101,6 +102,7 @@ class Trainer(object):
         # Start time
 
         start_time = time.time()
+        i = 0
         for step in range(start, self.total_step):
 
             # ================== Train D ================== #
@@ -118,17 +120,25 @@ class Trainer(object):
             # dr1, dr2, df1, df2, gf1, gf2 are attention scores
 
             real_images = tensor2var(real_images)
-            (d_out_real, dr1, dr2) = self.D(real_images)
+            d_out_real = self.D(real_images)
             if self.adv_loss == 'wgan-gp':
                 d_loss_real = -torch.mean(d_out_real)
             elif self.adv_loss == 'hinge':
                 d_loss_real = torch.nn.ReLU()(1.0 - d_out_real).mean()
 
             # apply Gumbel Softmax
+            z = tensor2var(torch.normal(0, torch.ones([real_images.size(0), self.z_dim])*3))
+            # (fake_images, gf1, gf2) = self.G(z)
+            (fake_images, gf2) = self.G(z)
 
-            z = tensor2var(torch.randn(real_images.size(0), self.z_dim))
-            (fake_images, gf1, gf2) = self.G(z)
-            (d_out_fake, df1, df2) = self.D(fake_images)
+            if i < 5:
+                print('***** Result Image size now *****')
+                print(fake_images.size())
+                # print(gf1.size())
+                print(gf2.size())
+            i = i + 1
+
+            d_out_fake = self.D(fake_images)
 
             if self.adv_loss == 'wgan-gp':
                 d_loss_fake = d_out_fake.mean()
@@ -150,7 +160,7 @@ class Trainer(object):
                                    1).cuda().expand_as(real_images)
                 interpolated = Variable(alpha * real_images.data + (1
                         - alpha) * fake_images.data, requires_grad=True)
-                (out, _, _) = self.D(interpolated)
+                out = self.D(interpolated)
 
                 grad = torch.autograd.grad(
                     outputs=out,
@@ -175,13 +185,13 @@ class Trainer(object):
 
             # ================== Train G and gumbel ================== #
             # Create random noise
-
-            z = tensor2var(torch.randn(real_images.size(0), self.z_dim))
-            (fake_images, _, _) = self.G(z)
+            z = tensor2var(torch.normal(0, torch.ones([real_images.size(0), self.z_dim])*3))
+            # (fake_images, _, _) = self.G(z)
+            (fake_images, _) = self.G(z)
 
             # Compute loss with fake images
 
-            (g_out_fake, _, _) = self.D(fake_images)  # batch x n
+            g_out_fake = self.D(fake_images)  # batch x n
             if self.adv_loss == 'wgan-gp':
                 g_loss_fake = -g_out_fake.mean()
             elif self.adv_loss == 'hinge':
@@ -196,14 +206,13 @@ class Trainer(object):
             if (step + 1) % self.log_step == 0:
                 elapsed = time.time() - start_time
                 elapsed = str(datetime.timedelta(seconds=elapsed))
-                print('Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_out_real: {:.4f},  ave_gamma_l3: {:.4f}, ave_gamma_l4: {:.4f}'.format(
+                print('Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_out_real: {:.4f}, ave_gamma_l4: {:.4f}'.format(
                     elapsed,
                     step + 1,
                     self.total_step,
                     step + 1,
                     self.total_step,
                     d_loss_real.data[0],
-                    self.G.module.attn1.gamma.mean().data[0],
                     self.G.module.attn2.gamma.mean().data[0],
                     ))
 
@@ -214,7 +223,7 @@ class Trainer(object):
                     'd_loss_fake': d_loss_fake.data[0],
                     'd_loss': d_loss.data[0],
                     'g_loss_fake': g_loss_fake.data[0],
-                    'ave_gamma_l3': self.G.module.attn1.gamma.mean().data[0],
+                    # 'ave_gamma_l3': self.G.module.attn1.gamma.mean().data[0],
                     'ave_gamma_l4': self.G.module.attn2.gamma.mean().data[0],
                     }
 
@@ -237,18 +246,35 @@ class Trainer(object):
 
                 info = \
                     {'fake_images': (fake_images.view(fake_images.size())[:
-                     10, :, :, :]).data.cpu().numpy(),
+                     16, :, :, :]).data.cpu().numpy(),
                      'real_images': (real_images.view(real_images.size())[:
-                     10, :, :, :]).data.cpu().numpy()}
+                     16, :, :, :]).data.cpu().numpy()}
 
-                (fake_images, _, _) = self.G(fixed_z)
+                # (fake_images, at1, at2) = self.G(fixed_z)
+                (fake_images, at2) = self.G(fixed_z)
                 save_image(denorm(fake_images.data),
                            os.path.join(self.sample_path,
                            '{}_fake.png'.format(step + 1)))
 
-                info['fixed_fake_images'] = \
-                   (denorm(real_images.data).view(denorm(real_images.data).size())[:
-                              5, :, :, :]).cpu().numpy()
+                print('***** Fake Image size now *****')
+                print('fake_images ', fake_images.size())
+                print('at2 ', at2.size())   # B * N * N
+                at2_4d = at2.view(*(at2.size()[0], at2.size()[1], int(math.sqrt(at2.size()[2])), int(math.sqrt(at2.size()[2])))) # W * N * W * H
+                print('at2_4d ', at2_4d.size())
+                at2_mean = at2_4d.mean(dim=1,keepdim=False) # B * W * H
+                print('at2_mean ', at2_mean.size())
+
+                # save_gradient_images(at2_mean,'{}_attn.png'.format(step + 1))
+                # info['fixed_fake_images'] = \
+                #    (denorm(real_images.data).view(denorm(real_images.data).size())[:
+                #               5, :, :, :]).cpu().numpy()
+
+                # print('***** Attention_images_1 *****')
+                # print(at1.size())
+                #
+                # info['Attention_images_1'] = (at1.view(at1.size())[:
+                #  16, :, :, :]).data.cpu().numpy()
+
 
                 for (tag, image) in info.items():
                     self.logger.image_summary(tag, image, step + 1)
@@ -310,3 +336,33 @@ class Trainer(object):
         (real_images, _) = next(data_iter)
         save_image(denorm(real_images), os.path.join(self.sample_path,
                    'real.png'))
+
+    def save_gradient_images(self, gradient, file_name):
+        """
+            Exports the original gradient image
+
+        Args:
+            gradient (np arr): Numpy array of the gradient with shape (3, 224, 224)
+            file_name (str): File name to be exported
+        """
+        if not os.path.exists('attn2/results'):
+            os.makedirs('attn2/results')
+        # Normalize
+        gradient = gradient - gradient.min()
+        gradient /= gradient.max()
+        # Save image
+        path = os.path.join('attn2/results', file_name + '.jpg')
+        im = gradient
+        if isinstance(im, np.ndarray):
+            if len(im.shape) == 2:
+                im = np.expand_dims(im, axis=0)
+            if im.shape[0] == 1:
+                # Converting an image with depth = 1 to depth = 3, repeating the same values
+                # For some reason PIL complains when I want to save channel image as jpg without
+                # additional format in the .save()
+                im = np.repeat(im, 3, axis=0)
+                # Convert to values to range 1-255 and W,H, D
+            if im.shape[0] == 3:
+                im = im.transpose(1, 2, 0) * 255
+            im = Image.fromarray(im.astype(np.uint8))
+        im.save(path)
