@@ -55,6 +55,8 @@ $ bash download.sh CelebA (404 not found)
 # or
 $ bash download.sh LSUN
 # For Hearthstone player
+$ mkdir hearthstone-card-images
+$ cd hearthstone-card-images
 $ wget https://www.dropbox.com/s/vvaxb4maoj4ri34/hearthstone_card.zip?dl=0
 $ unzip hearthstone_card.zip?dl=0
  ```
@@ -63,19 +65,28 @@ $ unzip hearthstone_card.zip?dl=0
 ##### (i) Train
 ```bash
 $ python main.py --batch_size 64 --imsize 64 --dataset celeb --adv_loss hinge --version sagan_celeb
-or
+# or
 $ python main.py --batch_size 64 --imsize 64 --dataset lsun --adv_loss hinge --version sagan_lsun
 ```
 
-Advanced training:
+##### (ii) Custom Train
 ```bash
-python main.py --batch_size 16 --imsize 64 --dataset hearthstone --adv_loss hinge --version sagan_hearth_at1 --num_workers 16 --use_tensorboard True --parallel True --total_step 100000 --log_step 100
+$ python main.py --batch_size 16 --imsize 64 --dataset hearthstone --adv_loss hinge --version sagan_hearth_at1 --num_workers 16 --use_tensorboard True --parallel True --total_step 100000 --log_step 100
 ```
-#### 4. Enjoy the results
+For argument details, please read parameter.py
+
+#### 4. Attention & Statistics visualization
+ ```bash
+ tensorboard --logdir ./logs
+ ```
+
+#### 5. Fake images located at
 ```bash
 $ cd samples/sagan_celeb
-or
+# or
 $ cd samples/sagan_lsun
+# or
+$ cd samples/sagan_hearth_at1
 
 ```
 Samples generated every 100 iterations are located. The rate of sampling could be controlled via --sample_step (ex, --sample_step 100).
@@ -89,7 +100,7 @@ Samples generated every 100 iterations are located. The rate of sampling could b
 
 - Colormap from opencv(https://docs.opencv.org/2.4/modules/contrib/doc/facerec/colormaps.html)
 - Most attent part shows in RED (1) , most non-attent part shows in BLUE(0)
-- Scores are ranged in [0,1]: 
+- Scores are ranged in [0,1]:
 ![alt text](https://docs.opencv.org/2.4/_images/colorscale_jet.jpg)
 
 <p align="center"><img width="100%" src="image/6464_95500_attn.png" /></p>

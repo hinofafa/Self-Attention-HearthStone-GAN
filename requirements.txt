@@ -4,4 +4,4 @@ tensorflow
 torchvision
 scipy
 numpy
-PyTorch==0.3.0
+opencv-python
