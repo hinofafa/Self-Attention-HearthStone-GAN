@@ -108,7 +108,7 @@ class Generator(nn.Module):
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn( 16, 'relu')
-        self.attn2 = Self_Attn( 32, 'relu')
+        self.attn2 = Self_Attn( 64, 'relu')
 
     def forward(self, z):
         # print('*****Generator*****')
@@ -122,11 +122,10 @@ class Generator(nn.Module):
         # print('gl3 size: ', out.size())
         out=self.l4(out)
         # print('l4 size: ', out.size())
-        # out,p1 = self.attn1(out)
+        out,p2 = self.attn2(out)
         # print('dattn1 size: ', out.size())
         out = self.l5(out)
         # print('gl4 size: ', out.size())
-        out,p2 = self.attn2(out)
         # print('gattn2 size: ', p2.size())
         out=self.last(out)
         # print('glast size: ', out.size())
@@ -177,7 +176,7 @@ class Discriminator(nn.Module):
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn(512, 'relu')
-        self.attn2 = Self_Attn(1024, 'relu')
+        self.attn2 = Self_Attn(512, 'relu')
 
     def forward(self, x):
         # print('*****Discriminator*****')
@@ -191,10 +190,10 @@ class Discriminator(nn.Module):
         out=self.l4(out)
         # print('l4 size: ', out.size())
         # out,p1 = self.attn1(out)
+        out,p2 = self.attn2(out)
         # print('dattn1 size: ', out.size())
         out = self.l5(out)
         # print('dl4 size: ', out.size())
-        out,p2 = self.attn2(out)
         # print('dattn2 size: ', p2.size())
         out=self.last(out)
         # print('dlast size: ', out.size())
