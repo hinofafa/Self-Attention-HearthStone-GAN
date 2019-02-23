@@ -1,15 +1,15 @@
-# Self-Attention HearthStone GAN
+# Self-Attention GAN in Hearthstone
+<p align="center"><img width="100%" src="image/banner.jpg" /></p>
 **[Han Zhang, Ian Goodfellow, Dimitris Metaxas and Augustus Odena, "Self-Attention Generative Adversarial Networks." arXiv preprint arXiv:1805.08318 (2018)](https://arxiv.org/abs/1805.08318).**
 
 ## Meta overview
-This repository provides a PyTorch implementation of [SAGAN](https://arxiv.org/abs/1805.08318). Both wgan-gp and wgan-hinge loss are ready, but note that wgan-gp is somehow not compatible with the spectral normalization. Remove all the spectral normalization at the model for the adoption of wgan-gp.
+This repository provides a PyTorch implementation of [SAGAN](https://arxiv.org/abs/1805.08318). Both wgan-gp and wgan-hinge loss are ready, but note that wgan-gp is somehow not compatible with the spectral normalization. Remove all the spectral normalization at the model for the adoption of wgan-gp. Self-attentions are applied before CNN of both discriminator and generator.
+
+##### Self Attention Layer
+<p align="center"><img width="100%" src="image/main_model.PNG" /></p>
 
 Citation:
 [heykeetae/Self-Attention-GAN](https://github.com/heykeetae/Self-Attention-GAN)
-
-Self-attentions are applied before CNN of both discriminator and generator.
-
-<p align="center"><img width="100%" src="image/main_model.PNG" /></p>
 
 ## Original Repo status
 *  **[20180608] updated the self-attention module. Thanks to my colleague [Cheonbok Park](https://github.com/cheonbok94)! see 'sagan_models.py' for the update. Should be efficient, and run on large sized images**
