@@ -274,7 +274,7 @@ class Trainer(object):
                     # print('at2 mean size', at2_mean[i].size())
 
                     f = BytesIO()
-                    img = np.uint8(np.zeros(at2_mean[i,:,:].size()))
+                    img = np.uint8(np.zeros(at2_mean[i,:,:].size()[0],at2_mean[i,:,:].size()[1],3))
                     a = np.uint8(at2_mean[i,:,:].mul(255).data.cpu().numpy())
                     # print('image: ', img.shape)
                     # print('a shape: ',a.shape)
