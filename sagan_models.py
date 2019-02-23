@@ -149,23 +149,23 @@ class Discriminator(nn.Module):
         layer1.append(SpectralNorm(nn.Conv2d(3, conv_dim, 4, 2, 1)))
         layer1.append(nn.LeakyReLU(0.1))
 
-        curr_dim = conv_dim #32
+        curr_dim = conv_dim #128
 
         layer2.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
         layer2.append(nn.LeakyReLU(0.1))
-        curr_dim = curr_dim * 2 #16
+        curr_dim = curr_dim * 2 #64
 
         layer3.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
         layer3.append(nn.LeakyReLU(0.1))
-        curr_dim = curr_dim * 2 #8
+        curr_dim = curr_dim * 2 #32
 
         layer4.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
         layer4.append(nn.LeakyReLU(0.1))
-        curr_dim = curr_dim*2 #4
+        curr_dim = curr_dim*2 #16
 
         layer5.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
         layer5.append(nn.LeakyReLU(0.1))
-        curr_dim = curr_dim*2 #4
+        curr_dim = curr_dim*2 #8
 
         self.l1 = nn.Sequential(*layer1)
         self.l2 = nn.Sequential(*layer2)
@@ -173,7 +173,7 @@ class Discriminator(nn.Module):
         self.l4 = nn.Sequential(*layer4)
         self.l5 = nn.Sequential(*layer5)
 
-        last.append(nn.Conv2d(curr_dim, 1, 4))
+        last.append(nn.Conv2d(curr_dim, 1, 8))
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn(512, 'relu')
