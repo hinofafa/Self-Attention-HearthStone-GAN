@@ -280,6 +280,7 @@ class Trainer(object):
                     # print('a shape: ',a.shape)
 
                     # im_image = img.reshape(img.shape[1],img.shape[2],img.shape[0])
+                    im_image = img
                     im_attn = cv2.applyColorMap(a, cv2.COLORMAP_JET)
 
                     img_with_heatmap = np.float32(im_attn) + np.float32(im_image)
