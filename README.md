@@ -32,7 +32,7 @@ Self-attentions are applied before CNN of both discriminator and generator.
 * [Python 3.5+](https://www.continuum.io/downloads)
 * [PyTorch 0.3.0](http://pytorch.org/)
 * [opencv-python](https://pypi.org/project/opencv-python/)
-
+* Details in `requirements.txt`
 
 ## Usage
 
@@ -40,21 +40,23 @@ Self-attentions are applied before CNN of both discriminator and generator.
 ```bash
 $ git clone https://github.com/heykeetae/Self-Attention-GAN.git
 $ cd Self-Attention-GAN
+# for conda user
+$ conda create -n sagan python=3.5
+$ conda activate sagan
+$ conda install pytorch=0.3.0
+
+$ pip install -r requirements.txt
 ```
 
 #### 2. Install datasets (CelebA or LSUN or Hearthstone)
 ```bash
+$ cd data
 $ bash download.sh CelebA (404 not found)
-or
+# or
 $ bash download.sh LSUN
-```
-
- For Hearthstone player
- ```bash
-
-$ git clone https://github.com/schmich/hearthstone-card-images
-
-
+# For Hearthstone player
+$ wget https://www.dropbox.com/s/vvaxb4maoj4ri34/hearthstone_card.zip?dl=0
+$ unzip hearthstone_card.zip?dl=0
  ```
 
 #### 3. Train
@@ -84,6 +86,11 @@ Samples generated every 100 iterations are located. The rate of sampling could b
 <p align="center"><img width="100%" src="image/6464_95500.png" /></p>
 
 ### 64*64 Attention result on Hearthstone (step #95500)
+
+- Colormap from opencv(https://docs.opencv.org/2.4/modules/contrib/doc/facerec/colormaps.html)
+- Most attent part shows in RED (1) , most non-attent part shows in BLUE(0)
+- Scores are ranged in [0,1]: 
+![alt text](https://docs.opencv.org/2.4/_images/colorscale_jet.jpg)
 
 <p align="center"><img width="100%" src="image/6464_95500_attn.png" /></p>
 
