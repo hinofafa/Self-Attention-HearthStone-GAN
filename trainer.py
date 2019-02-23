@@ -274,12 +274,12 @@ class Trainer(object):
                     # print('at2 mean size', at2_mean[i].size())
 
                     f = BytesIO()
-                    img = np.uint8(fake_images[i,:,:,:].mul(255).data.cpu().numpy())
+                    img = np.uint8(np.zeros(at2_mean[i,:,:].size()))
                     a = np.uint8(at2_mean[i,:,:].mul(255).data.cpu().numpy())
                     # print('image: ', img.shape)
                     # print('a shape: ',a.shape)
 
-                    im_image = img.reshape(img.shape[1],img.shape[2],img.shape[0])
+                    # im_image = img.reshape(img.shape[1],img.shape[2],img.shape[0])
                     im_attn = cv2.applyColorMap(a, cv2.COLORMAP_JET)
 
                     img_with_heatmap = np.float32(im_attn) + np.float32(im_image)

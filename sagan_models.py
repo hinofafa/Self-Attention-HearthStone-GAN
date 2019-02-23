@@ -84,11 +84,11 @@ class Generator(nn.Module):
 
         curr_dim = int(curr_dim / 2)
 
-        # layer5.append(SpectralNorm(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)))
-        # layer5.append(nn.BatchNorm2d(int(curr_dim / 2)))
-        # layer5.append(nn.ReLU())
-        #
-        # curr_dim = int(curr_dim / 2)
+        layer5.append(SpectralNorm(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)))
+        layer5.append(nn.BatchNorm2d(int(curr_dim / 2)))
+        layer5.append(nn.ReLU())
+
+        curr_dim = int(curr_dim / 2)
 
         # layer6.append(SpectralNorm(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)))
         # layer6.append(nn.BatchNorm2d(int(curr_dim / 2)))
@@ -100,15 +100,15 @@ class Generator(nn.Module):
         self.l2 = nn.Sequential(*layer2)
         self.l3 = nn.Sequential(*layer3)
         self.l4 = nn.Sequential(*layer4)
-        # self.l5 = nn.Sequential(*layer5)
+        self.l5 = nn.Sequential(*layer5)
         # self.l6 = nn.Sequential(*layer6)
 
-        last.append(nn.ConvTranspose2d(curr_dim, 3, 1, 1, 0))
+        last.append(nn.ConvTranspose2d(curr_dim, 3, 4, 2, 1))
         last.append(nn.Tanh())
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn( 16, 'relu')
-        self.attn2 = Self_Attn( 64, 'relu')
+        self.attn2 = Self_Attn( 32, 'relu')
 
     def forward(self, z):
         # print('*****Generator*****')
@@ -120,11 +120,11 @@ class Generator(nn.Module):
         # print('gl2 size: ', out.size())
         out=self.l3(out)
         # print('gl3 size: ', out.size())
-        # out=self.l4(out)
+        out=self.l4(out)
         # print('l4 size: ', out.size())
         # out,p1 = self.attn1(out)
         # print('dattn1 size: ', out.size())
-        out = self.l4(out)
+        out = self.l5(out)
         # print('gl4 size: ', out.size())
         out,p2 = self.attn2(out)
         # print('gattn2 size: ', p2.size())
@@ -163,21 +163,21 @@ class Discriminator(nn.Module):
         layer4.append(nn.LeakyReLU(0.1))
         curr_dim = curr_dim*2 #4
 
-        # layer5.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
-        # layer5.append(nn.LeakyReLU(0.1))
-        # curr_dim = curr_dim*2 #4
+        layer5.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
+        layer5.append(nn.LeakyReLU(0.1))
+        curr_dim = curr_dim*2 #4
 
         self.l1 = nn.Sequential(*layer1)
         self.l2 = nn.Sequential(*layer2)
         self.l3 = nn.Sequential(*layer3)
         self.l4 = nn.Sequential(*layer4)
-        # self.l5 = nn.Sequential(*layer5)
+        self.l5 = nn.Sequential(*layer5)
 
         last.append(nn.Conv2d(curr_dim, 1, 4))
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn(512, 'relu')
-        self.attn2 = Self_Attn(512, 'relu')
+        self.attn2 = Self_Attn(1024, 'relu')
 
     def forward(self, x):
         # print('*****Discriminator*****')
@@ -192,7 +192,7 @@ class Discriminator(nn.Module):
         # print('l4 size: ', out.size())
         # out,p1 = self.attn1(out)
         # print('dattn1 size: ', out.size())
-        # out = self.l4(out)
+        out = self.l5(out)
         # print('dl4 size: ', out.size())
         out,p2 = self.attn2(out)
         # print('dattn2 size: ', p2.size())
