@@ -254,9 +254,10 @@ class Trainer(object):
 
                 # (fake_images, at1, at2) = self.G(fixed_z)
                 (fake_images, at2) = self.G(fixed_z)
-                save_image(denorm(fake_images.data),
-                           os.path.join(self.sample_path,
-                           '{}_fake.png'.format(step + 1)))
+                if (step + 1) % (self.sample_step * 10) == 0:
+                    save_image(denorm(fake_images.data),
+                            os.path.join(self.sample_path,
+                            '{}_fake.png'.format(step + 1)))
 
                 # print('***** Fake Image size now *****')
                 # print('fake_images ', fake_images.size())
