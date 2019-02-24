@@ -12,7 +12,6 @@ Citation:
 [heykeetae/Self-Attention-GAN](https://github.com/heykeetae/Self-Attention-GAN)
 
 ## Original Repo status
-*  **[20180608] updated the self-attention module. Thanks to my colleague [Cheonbok Park](https://github.com/cheonbok94)! see 'sagan_models.py' for the update. Should be efficient, and run on large sized images**
 * Unsupervised setting (use no label yet)
 * Applied: [Spectral Normalization](https://arxiv.org/abs/1802.05957), code from [here](https://github.com/christiancosgrove/pytorch-spectral-normalization-gan)
 * Implemented: self-attention module, two-timescale update rule (TTUR), wgan-hinge loss, wgan-gp loss
