@@ -61,14 +61,14 @@ $ unzip hearthstone_card.zip?dl=0
  ```
 
 #### 3. Train
-##### (i) Train
+##### (i) Train in CelebA or Sagan dataset
 ```bash
 $ python main.py --batch_size 64 --imsize 64 --dataset celeb --adv_loss hinge --version sagan_celeb
 # or
 $ python main.py --batch_size 64 --imsize 64 --dataset lsun --adv_loss hinge --version sagan_lsun
 ```
 
-##### (ii) Custom Train
+##### (ii) Custom parameteric Train in Hearthstone dataset
 ```bash
 $ python main.py --batch_size 16 --imsize 64 --dataset hearthstone --adv_loss hinge --version sagan_hearth_at1 --num_workers 16 --use_tensorboard True --parallel True --total_step 100000 --log_step 100
 ```
@@ -76,7 +76,7 @@ For argument details, please read parameter.py
 
 #### 4. Attention & Statistics visualization
  ```bash
- tensorboard --logdir ./logs
+ tensorboard --logdir ./logs/sagan_hearth_at1
  ```
 
 #### 5. Fake images located at
