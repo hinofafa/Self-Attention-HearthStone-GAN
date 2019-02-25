@@ -91,7 +91,7 @@ class Trainer(object):
 
         # Fixed input for debugging
 
-        fixed_z = tensor2var(torch.normal(0, torch.ones([self.batch_size, self.z_dim])*3))
+        fixed_z = tensor2var(torch.normal(0, torch.ones([self.batch_size, self.z_dim])*10))
 
         # Start with trained model
 
@@ -128,7 +128,7 @@ class Trainer(object):
                 d_loss_real = torch.nn.ReLU()(1.0 - d_out_real).mean()
 
             # apply Gumbel Softmax
-            z = tensor2var(torch.normal(0, torch.ones([real_images.size(0), self.z_dim])*3))
+            z = tensor2var(torch.normal(0, torch.ones([real_images.size(0), self.z_dim])*10))
             # (fake_images, gf1, gf2) = self.G(z)
             (fake_images, gf2) = self.G(z)
 
@@ -186,7 +186,7 @@ class Trainer(object):
 
             # ================== Train G and gumbel ================== #
             # Create random noise
-            z = tensor2var(torch.normal(0, torch.ones([real_images.size(0), self.z_dim])*3))
+            z = tensor2var(torch.normal(0, torch.ones([real_images.size(0), self.z_dim])*10))
             # (fake_images, _, _) = self.G(z)
             (fake_images, _) = self.G(z)
 
