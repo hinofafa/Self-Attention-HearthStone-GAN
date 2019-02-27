@@ -55,7 +55,7 @@ class Generator(nn.Module):
         layer4 = []
         layer5 = []
         layer5 = []
-        # layer6 = []
+        layer6 = []
         last = []
 
         repeat_num = int(np.log2(self.imsize)) - 5
@@ -90,20 +90,20 @@ class Generator(nn.Module):
 
         curr_dim = int(curr_dim / 2)
 
-        # layer6.append(SpectralNorm(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)))
-        # layer6.append(nn.BatchNorm2d(int(curr_dim / 2)))
-        # layer6.append(nn.ReLU())
-        #
-        # curr_dim = int(curr_dim / 2)
+        layer6.append(SpectralNorm(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)))
+        layer6.append(nn.BatchNorm2d(int(curr_dim / 2)))
+        layer6.append(nn.ReLU())
+
+        curr_dim = int(curr_dim / 2)
 
         self.l1 = nn.Sequential(*layer1)
         self.l2 = nn.Sequential(*layer2)
         self.l3 = nn.Sequential(*layer3)
         self.l4 = nn.Sequential(*layer4)
         self.l5 = nn.Sequential(*layer5)
-        # self.l6 = nn.Sequential(*layer6)
+        self.l6 = nn.Sequential(*layer6)
 
-        last.append(nn.ConvTranspose2d(curr_dim, 3, 4, 2, 1))
+        last.append(nn.ConvTranspose2d(curr_dim, 3, 1, 1, 0))
         last.append(nn.Tanh())
         self.last = nn.Sequential(*last)
 
@@ -125,6 +125,7 @@ class Generator(nn.Module):
         out,p2 = self.attn2(out)
         # print('dattn1 size: ', out.size())
         out = self.l5(out)
+        out = self.l6(out)
         # print('gl4 size: ', out.size())
         # print('gattn2 size: ', p2.size())
         out=self.last(out)
@@ -143,6 +144,7 @@ class Discriminator(nn.Module):
         layer3 = []
         layer4 = []
         layer5 = []
+        layer6 = []
         last = []
 
         layer1.append(SpectralNorm(nn.Conv2d(3, conv_dim, 4, 2, 1)))
@@ -166,13 +168,18 @@ class Discriminator(nn.Module):
         layer5.append(nn.LeakyReLU(0.1))
         curr_dim = curr_dim*2 #8
 
+        layer6.append(SpectralNorm(nn.Conv2d(curr_dim, curr_dim * 2, 4, 2, 1)))
+        layer6.append(nn.LeakyReLU(0.1))
+        curr_dim = curr_dim*2 #4
+
         self.l1 = nn.Sequential(*layer1)
         self.l2 = nn.Sequential(*layer2)
         self.l3 = nn.Sequential(*layer3)
         self.l4 = nn.Sequential(*layer4)
         self.l5 = nn.Sequential(*layer5)
+        self.l6 = nn.Sequential(*layer6)
 
-        last.append(nn.Conv2d(curr_dim, 1, 8))
+        last.append(nn.Conv2d(curr_dim, 1, 4))
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn(512, 'relu')
@@ -193,6 +200,7 @@ class Discriminator(nn.Module):
         out,p2 = self.attn2(out)
         # ('dattn1 size: ', out.size())
         out = self.l5(out)
+        out = self.l6(out)
         #print('dl4 size: ', out.size())
         # print('dattn2 size: ', p2.size())
         out=self.last(out)
