@@ -60,11 +60,11 @@ class Generator(nn.Module):
 
         repeat_num = int(np.log2(self.imsize)) - 5
         mult = 2 ** repeat_num # 8
-        layer1.append(SpectralNorm(nn.ConvTranspose2d(z_dim, int(conv_dim * mult), 8)))
-        layer1.append(nn.BatchNorm2d(int(conv_dim * mult)))
+        layer1.append(SpectralNorm(nn.ConvTranspose2d(z_dim, 1024, 8)))
+        layer1.append(nn.BatchNorm2d(int(1024)))
         layer1.append(nn.ReLU())
 
-        curr_dim = int(conv_dim * mult)
+        curr_dim = 1024
 
         layer2.append(SpectralNorm(nn.ConvTranspose2d(curr_dim, int(curr_dim / 2), 4, 2, 1)))
         layer2.append(nn.BatchNorm2d(int(curr_dim / 2)))
@@ -108,7 +108,7 @@ class Generator(nn.Module):
         self.last = nn.Sequential(*last)
 
         # self.attn1 = Self_Attn( 16, 'relu')
-        self.attn2 = Self_Attn( 64, 'relu')
+        self.attn2 = Self_Attn( 128, 'relu')
 
     def forward(self, z):
         # print('*****Generator*****')
@@ -191,9 +191,9 @@ class Discriminator(nn.Module):
         # print('l4 size: ', out.size())
         # out,p1 = self.attn1(out)
         out,p2 = self.attn2(out)
-        # print('dattn1 size: ', out.size())
+        # ('dattn1 size: ', out.size())
         out = self.l5(out)
-        # print('dl4 size: ', out.size())
+        #print('dl4 size: ', out.size())
         # print('dattn2 size: ', p2.size())
         out=self.last(out)
         # print('dlast size: ', out.size())

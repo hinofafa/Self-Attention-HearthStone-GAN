@@ -10,7 +10,7 @@ def get_parameters():
     # Model hyper-parameters
     parser.add_argument('--model', type=str, default='sagan', choices=['sagan', 'qgan'])
     parser.add_argument('--adv_loss', type=str, default='wgan-gp', choices=['wgan-gp', 'hinge'])
-    parser.add_argument('--imsize', type=int, default=64)
+    parser.add_argument('--imsize', type=int, default=256)
     parser.add_argument('--g_num', type=int, default=5)
     parser.add_argument('--z_dim', type=int, default=64)
     parser.add_argument('--g_conv_dim', type=int, default=64)
