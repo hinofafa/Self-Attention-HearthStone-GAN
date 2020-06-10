@@ -8,9 +8,6 @@ This repository provides a PyTorch implementation of [SAGAN](https://arxiv.org/a
 ##### Self Attention Layer
 <p align="center"><img width="100%" src="image/main_model.PNG" /></p>
 
-Citation:
-[heykeetae/Self-Attention-GAN](https://github.com/heykeetae/Self-Attention-GAN)
-
 ## Original Repo status
 * Unsupervised setting (use no label yet)
 * Applied: [Spectral Normalization](https://arxiv.org/abs/1802.05957), code from [here](https://github.com/christiancosgrove/pytorch-spectral-normalization-gan)
